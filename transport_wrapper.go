@@ -122,7 +122,7 @@ func LoggingTransport(name string) func(next http.RoundTripper) http.RoundTrippe
 			start := time.Now()
 			defer func() {
 				logger = logger.With(zap.String("host", r.Host)).
-					With(zap.String("host", r.URL.Path)).
+					With(zap.String("path", r.URL.Path)).
 					With(zap.String("service", name)).
 					With(zap.String("start", start.Format("2006-01-02 15:04:05"))).
 					With(zap.Int64("elapsed", time.Since(start).Milliseconds())).
