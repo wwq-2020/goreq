@@ -18,6 +18,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
@@ -43,7 +44,7 @@ func initTrace() {
 		sdktrace.WithResource(res),
 	}
 	if traceEndpoint := os.Getenv("TRACE_ENDPOINT"); traceEndpoint != "" {
-		conn, err := grpc.DialContext(ctx, traceEndpoint, grpc.WithInsecure())
+		conn, err := grpc.DialContext(ctx, traceEndpoint, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			logger.With(zap.Error(err)).
 				Fatal("failed to DialContext")
