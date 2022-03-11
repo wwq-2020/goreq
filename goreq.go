@@ -9,6 +9,12 @@ import (
 	"sync/atomic"
 )
 
+type Transport func(*http.Request) (*http.Response, error)
+
+func (t Transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	return t(req)
+}
+
 type Builder interface {
 	URL(url string) Builder
 	BaseURL(baseURL string) Builder
@@ -19,7 +25,7 @@ type Builder interface {
 	QueryString(key string, value string) Builder
 	Header(key string, value string) Builder
 	Do(ctx context.Context) error
-	WrapTransport(transportWrapper func(http.RoundTripper) http.RoundTripper) Builder
+	WrapTransport(transportWrappers ...func(http.RoundTripper) http.RoundTripper) Builder
 }
 
 type builder struct {
@@ -39,13 +45,14 @@ type builder struct {
 
 func New() Builder {
 	return &builder{
-		values: make(url.Values),
-		header: make(http.Header),
+		values:           make(url.Values),
+		header:           make(http.Header),
+		rebuildTransport: 1,
 	}
 }
 
-func (b *builder) WrapTransport(transportWrapper func(http.RoundTripper) http.RoundTripper) Builder {
-	b.transportWrappers = append(b.transportWrappers, transportWrapper)
+func (b *builder) WrapTransport(transportWrappers ...func(http.RoundTripper) http.RoundTripper) Builder {
+	b.transportWrappers = append(b.transportWrappers, transportWrappers...)
 	return b
 }
 
@@ -202,6 +209,6 @@ func Header(key string, value string) Builder {
 	return New().Header(key, value)
 }
 
-func WrapRoundTrip(transportWrapper func(http.RoundTripper) http.RoundTripper) Builder {
-	return New().WrapTransport(transportWrapper)
+func WrapTransport(transportWrappers ...func(http.RoundTripper) http.RoundTripper) Builder {
+	return New().WrapTransport(transportWrappers...)
 }

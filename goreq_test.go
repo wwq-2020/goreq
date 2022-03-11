@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func TestDo(t *testing.T) {
@@ -28,10 +29,13 @@ func TestDo(t *testing.T) {
 		if err := json.NewEncoder(w).Encode(givenResp); err != nil {
 			t.Fatal("unexpected err")
 		}
+		time.Sleep(time.Second * 3)
 	}))
 	defer s.Close()
 	gotResp := &resp{}
-	err := New().URL(s.URL).Method(http.MethodPost).Req(givenReq).Resp(gotResp).Do(context.TODO())
+	err := New().URL(s.URL).Method(http.MethodPost).Req(givenReq).Resp(gotResp).
+		WrapTransport(LoggingTransport("demo"), TraceTransport("demo"), TimeoutTransport(time.Second)).
+		Do(context.TODO())
 	if err != nil {
 		t.Fatalf("unexpected err:%#v", err)
 	}
