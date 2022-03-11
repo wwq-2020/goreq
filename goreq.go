@@ -53,6 +53,7 @@ func New() Builder {
 
 func (b *builder) WrapTransport(transportWrappers ...func(http.RoundTripper) http.RoundTripper) Builder {
 	b.transportWrappers = append(b.transportWrappers, transportWrappers...)
+	atomic.StoreInt32(&b.rebuildTransport, 1)
 	return b
 }
 
@@ -137,7 +138,7 @@ func (b *builder) buildTransport() http.RoundTripper {
 		transport = transportWrapper(transport)
 	}
 	b.cachedTransport = transport
-	atomic.StoreInt32(&b.rebuildTransport, 1)
+	atomic.StoreInt32(&b.rebuildTransport, 0)
 	return transport
 }
 
